@@ -94,7 +94,7 @@ Produktion driftsätts från en renderad kopia med dina egna värden, se avsnitt
 3. `npm run deploy`
 4. `npm run verify:production`
 
-CI på GitHub kör tester, Docker-bygge och CodeQL på pull requests till `main`. Det finns ingen förhandsmiljö. Kontaktdata, inklusive akademiker, uppdateras separat av kvartalskörningen i `kontakter/`, inte vid driftsättning.
+CI på GitHub kör tester, Docker-bygge och CodeQL vid varje push till `main`. Det finns ingen förhandsmiljö. Kontaktdata, inklusive akademiker, uppdateras separat av kvartalskörningen i `kontakter/`, inte vid driftsättning.
 
 ## Observability
 
