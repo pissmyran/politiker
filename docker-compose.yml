@@ -1,0 +1,41 @@
+# PolitikerKontakt – write to politicians from your own e-mail account.
+# Fill in the values below, then run:
+#   docker compose up -d
+# Open http://<server>:8787 and register with ADMIN_EMAIL; within a minute
+# that account becomes admin. The contact directory starts empty: add
+# recipients yourself or import them as admin.
+services:
+  politiker:
+    image: docker.io/driftaegis/politiker:0
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    environment:
+      # Host name the site is served on (links, e-mails, OAuth redirects).
+      PUBLIC_HOST: "politiker.example.com"
+      # The account registered with this address becomes admin.
+      ADMIN_EMAIL: "you@example.com"
+
+      # Optional: e-mail for account verification and password reset. Without it,
+      # new accounts are verified directly and password reset is unavailable.
+      SYSTEM_FROM_ADDRESS: "noreply@example.com"
+      SYSTEM_SMTP_HOST: "" # e.g. smtp.example.com
+      SYSTEM_SMTP_PORT: "587" # 587 (STARTTLS) or 465 (TLS)
+      SYSTEM_SMTP_USER: ""
+      SYSTEM_SMTP_PASSWORD: ""
+
+      # Optional but recommended for a public site: Cloudflare Turnstile against
+      # bot sign-ups (https://dash.cloudflare.com → Turnstile). "off" disables it.
+      TURNSTILE_SITE_KEY: ""
+      TURNSTILE_SECRET: "off"
+
+      # Optional: "Sign in with Google/Microsoft" and sending through Outlook.
+      OAUTH_GOOGLE_CLIENT_ID: ""
+      OAUTH_GOOGLE_CLIENT_SECRET: ""
+      OAUTH_MICROSOFT_CLIENT_ID: ""
+      OAUTH_MICROSOFT_CLIENT_SECRET: ""
+    volumes:
+      - politiker-data:/data # database, sessions, attachments and generated keys
+
+volumes:
+  politiker-data:

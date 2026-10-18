@@ -1,0 +1,6 @@
+# Kopiera till .dev.vars för lokal utveckling.
+# `wrangler.jsonc` deklarerar dessa namn som obligatoriska secrets, vilket gör
+# att Wrangler endast laddar just dessa värden från .dev.vars.
+
+MAIL_CRED_KEY=<generera med: openssl rand -base64 32>
+SYSTEM_SMTP_PASSWORD=<app-lösenord eller SMTP-lösenord>

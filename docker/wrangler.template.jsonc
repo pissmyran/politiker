@@ -1,0 +1,40 @@
+// Container config: same Worker, no Cloudflare account, routes or ids. D1, KV,
+// R2, the queue and the Durable Object all run locally under /data.
+{
+  "name": "politiker",
+  "main": "docker/container-entry.ts",
+  "compatibility_date": "2026-08-21",
+  "assets": {
+    "directory": "app/public",
+    "not_found_handling": "single-page-application",
+    "binding": "ASSETS",
+    "run_worker_first": ["/", "/api/*", "/admin", "/admin/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "politiker",
+      "database_id": "local",
+      "migrations_table": "d1_migrations",
+      "migrations_dir": "infra/migrations"
+    }
+  ],
+  "kv_namespaces": [{ "binding": "SESSIONS", "id": "local" }],
+  "queues": {
+    "producers": [{ "queue": "politiker-send-jobs", "binding": "SEND_QUEUE" }],
+    "consumers": [
+      {
+        "queue": "politiker-send-jobs",
+        "max_batch_size": 1,
+        "max_retries": 10,
+        "dead_letter_queue": "politiker-send-jobs-dlq"
+      }
+    ]
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "RATE_LIMITER", "class_name": "CredentialRateLimiter" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["CredentialRateLimiter"] }],
+  "r2_buckets": [{ "binding": "ATTACHMENTS", "bucket_name": "attachments" }],
+  "triggers": { "crons": ["* * * * *"] }
+}

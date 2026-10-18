@@ -1,0 +1,13 @@
+services:
+  scraper:
+    build: ./scraper
+    container_name: politiker_scraper
+    restart: "no"
+    volumes:
+      - ${OUTPUT_DIR:-./output}:/output
+      - ${LOG_DIR:-./logs}:/logs
+      # Your own source files (regioner.json and so on), see sources.example/.
+      - ${CONTACT_SOURCES_DIR:?Set CONTACT_SOURCES_DIR to your sources directory}:/sources:ro
+    environment:
+      - TZ=Europe/Stockholm
+      - CONTACT_SOURCES_DIR=/sources
