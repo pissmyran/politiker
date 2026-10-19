@@ -100,6 +100,9 @@ Containern talar vanlig HTTP på port 8787. Lägg den bakom en omvänd proxy med
 
 ## Changelog
 
+**0.12.1**
+- `tools/render.mjs` läser och skriver varje fil genom samma filbeskrivare, så att filen inte kan bytas ut mellan kontroll och skrivning.
+
 **0.12.0**
 - Inställningar kan ges en gång i `/data/import.env` i stället för i compose-filen. De sparas i `/data/settings.env` och importfilen raderas.
 - Imagen byggs från projektets eget repo: `docker build -t politiker .`.
