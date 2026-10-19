@@ -2,6 +2,10 @@
 
 Versions follow [semver](https://semver.org). The Docker image is tagged `X.Y.Z`, `X.Y`, `X` and `latest`.
 
+## 0.12.2 – 2026-10-19
+
+- `tools/render.mjs` writes each filled-in file in a loop until every byte is written, so a short write can no longer leave a truncated file behind.
+
 ## 0.12.1 – 2026-10-19
 
 - `tools/render.mjs` checks the size of, reads and rewrites each file through one file descriptor, so a file cannot be swapped between the check and the write (CodeQL js/file-system-race).
