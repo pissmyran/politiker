@@ -4,7 +4,7 @@
 # Cloudflare Workers runtime) through `wrangler dev --local`; D1, KV and R2
 # live under /data. The contact directory starts empty. The source has only
 # placeholders; the entrypoint fills them in from the container environment.
-FROM node:22-bookworm-slim
+FROM node:26-bookworm-slim
 
 ENV NODE_ENV=production \
     WRANGLER_SEND_METRICS=false \
