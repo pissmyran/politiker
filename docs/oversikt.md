@@ -49,7 +49,3 @@ En cron trigger kör varje minut för att fortsätta väntande arbete enligt app
 - R2/bilagor → architecture + storageverifiering
 - bindings/routes/cron → project-context
 - deploy/scripts → operations
-
-## Wiki
-
-

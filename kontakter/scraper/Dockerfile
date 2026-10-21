@@ -1,29 +1,28 @@
-FROM mcr.microsoft.com/playwright/python:v1.64.0-resolute
+FROM ubuntu:latest
 
 WORKDIR /app
 
-# Håll basimagen patchad. Playwright-imagen innehåller även globala Python-paket
-# utanför applikationens /opt/venv. Uppgradera därför de säkerhetsrelevanta
-# baskopiorna explicit med PEP 668-undantaget och ta bort global pip; runtime
-# använder endast venv-miljön nedan.
-RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-venv \
-    && python3 -m pip install --break-system-packages --no-cache-dir \
-         'idna>=3.19' 'setuptools>=84.0.0' 'msgpack>=1.2.1' \
-    && python3 -c "import importlib.metadata as m; print('base idna', m.version('idna')); print('base setuptools', m.version('setuptools')); print('base msgpack', m.version('msgpack'))" \
-    && python3 -m pip uninstall --break-system-packages --yes pip
-
-ENV VIRTUAL_ENV=/opt/venv
+# ubuntu:latest är alltid senaste Ubuntu LTS. Playwright installeras med pip i
+# en venv, och webbläsaren med `playwright install`, så att webbläsaren alltid
+# matchar Playwright-versionen i requirements.txt. Systempaketen uppgraderas
+# vid bygget; pip och venv-verktygen tas bort efteråt.
+ENV DEBIAN_FRONTEND=noninteractive \
+    VIRTUAL_ENV=/opt/venv \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 
 COPY requirements.txt .
-RUN python3 -m venv "${VIRTUAL_ENV}" \
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends ca-certificates python3 python3-venv \
+    && python3 -m venv "${VIRTUAL_ENV}" \
     && "${VIRTUAL_ENV}/bin/python" -m pip install --no-cache-dir -r requirements.txt \
+    && playwright install --with-deps chromium \
     && "${VIRTUAL_ENV}/bin/python" -m pip uninstall --yes pip \
     && apt-get purge -y python3-venv "python3.$(python3 -c 'import sys; print(sys.version_info.minor)')-venv" python3-pip-whl python3-setuptools-whl \
-    && rm -rf /var/lib/apt/lists/* /root/.cache/virtualenv /root/.cache/pip \
-    && "${VIRTUAL_ENV}/bin/python" -c "import importlib.metadata as m; print('venv idna', m.version('idna')); print('venv setuptools', m.version('setuptools')); print('venv msgpack', m.version('msgpack'))"
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/* /root/.cache \
+    && "${VIRTUAL_ENV}/bin/python" -c "import importlib.metadata as m; print('venv idna', m.version('idna')); print('venv setuptools', m.version('setuptools')); print('venv msgpack', m.version('msgpack')); print('playwright', m.version('playwright'))"
 
 COPY scraper.py politiker_common.py sources.py ./
 COPY entrypoint.sh .
