@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright/python:v1.64.0-noble
+FROM mcr.microsoft.com/playwright/python:v1.64.0-resolute
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ COPY requirements.txt .
 RUN python3 -m venv "${VIRTUAL_ENV}" \
     && "${VIRTUAL_ENV}/bin/python" -m pip install --no-cache-dir -r requirements.txt \
     && "${VIRTUAL_ENV}/bin/python" -m pip uninstall --yes pip \
-    && apt-get purge -y python3-venv python3.12-venv python3-pip-whl python3-setuptools-whl \
+    && apt-get purge -y python3-venv "python3.$(python3 -c 'import sys; print(sys.version_info.minor)')-venv" python3-pip-whl python3-setuptools-whl \
     && rm -rf /var/lib/apt/lists/* /root/.cache/virtualenv /root/.cache/pip \
     && "${VIRTUAL_ENV}/bin/python" -c "import importlib.metadata as m; print('venv idna', m.version('idna')); print('venv setuptools', m.version('setuptools')); print('venv msgpack', m.version('msgpack'))"
 

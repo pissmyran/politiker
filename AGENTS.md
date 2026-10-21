@@ -2,7 +2,7 @@
 
 ## Läs först
 
-- [CLAUDE.md](CLAUDE.md) — gemensamma regler för arbetssätt, deploy, loggning, kostnader och Docker. Allt arbete sker på `dev`; `main` ändras bara genom en PR från `dev` med merge commit.
+- [CLAUDE.md](CLAUDE.md) — gemensamma regler för arbetssätt, deploy, loggning, kostnader och Docker. Allt arbete sker på `dev`; `main` ändras bara genom en PR från `dev` med squash merge.
 - [docs/project-context.md](docs/project-context.md) — canonical runtime/current-state.
 - [docs/architecture.md](docs/architecture.md) — Worker-, storage- och queuegränser.
 - [docs/operations.md](docs/operations.md) — verifiering och incidentmodell.

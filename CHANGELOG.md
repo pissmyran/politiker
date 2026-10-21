@@ -2,6 +2,11 @@
 
 Versions follow [semver](https://semver.org). The Docker image is tagged `X.Y.Z`, `X.Y`, `X` and `latest`.
 
+## 0.12.3 – 2026-10-21
+
+- The image runs on `node:24-trixie-slim`: Node 24, the current LTS, on Debian 13 (stable).
+- The contact scraper image is based on Playwright's Ubuntu 26.04 LTS image (`v1.64.0-resolute`).
+
 ## 0.12.2 – 2026-10-19
 
 - `tools/render.mjs` writes each filled-in file in a loop until every byte is written, so a short write can no longer leave a truncated file behind.
