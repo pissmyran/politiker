@@ -5,7 +5,7 @@ Versions follow [semver](https://semver.org). The Docker image is tagged `X.Y.Z`
 ## 0.12.3 – 2026-10-21
 
 - The image runs on `node:24-trixie-slim`: Node 24, the current LTS, on Debian 13 (stable).
-- The contact scraper image is based on Playwright's Ubuntu 26.04 LTS image (`v1.64.0-resolute`).
+- The contact scraper image is based on `ubuntu:latest` (Ubuntu 26.04 LTS) with Playwright from `requirements.txt` in a venv; `playwright install --with-deps chromium` fetches the matching Chromium at build time.
 
 ## 0.12.2 – 2026-10-19
 
