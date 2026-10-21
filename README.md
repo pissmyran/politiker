@@ -1,5 +1,7 @@
 # Politiker
 
+**Dokumentation:** [vinedrinker.github.io/politiker](https://vinedrinker.github.io/politiker/) – start, dokumentation och Docker på en sida med sök.
+
 Politiker är en Cloudflare-baserad webbapplikation för konton, kontakt-/mottagardata, brev och utskick. Repositoryt innehåller både applikationsruntime och verktyg för att underhålla dess data.
 
 ## Snabb verifiering
@@ -15,7 +17,7 @@ npm run validate
 
 ## Dokumentation
 
-Börja i **[dokumentationsöversikten](docs/index.md)**.
+Börja i **[dokumentationsöversikten](docs/oversikt.md)**.
 
 - [Projektkontext](docs/project-context.md) — runtime, state och subsystem
 - [Arkitektur](docs/architecture.md) — request-, auth-, lagrings- och utskicksflöden
