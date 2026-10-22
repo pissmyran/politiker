@@ -6,10 +6,9 @@ Ett enda ställe för auth, URL-bygge och felhantering mot D1:s HTTP-API, så at
 inte varje skript återimplementerar samma POST-logik (och riskerar att driva
 isär i variabelnamn och felhantering).
 
-Konfiguration läses ur miljön. Historiskt har olika skript använt olika namn
-för samma sak; vi accepterar därför alias för bakåtkompatibilitet med både den
-befintliga .env på mp100 och GitHub Actions-secrets. Kanoniska namn först,
-alias efter:
+Konfigurationen läses ur processmiljön; ingen fil läses här. Sätt variablerna
+i skalet som kör skriptet. quarterly_refresh.sh läser in en env-fil först om
+POLITIKER_ENV_FILE pekar på en. Tokenet behöver bara D1-behörigheten Edit.
 
   CLOUDFLARE_ACCOUNT_ID
   CLOUDFLARE_API_TOKEN

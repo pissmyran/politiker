@@ -13,7 +13,7 @@ kontexten.
 Mail-adresser finns inte i API-svaret utan hämtas från respektive officiell
 profilsida.
 
-Miljövariabler som krävs (samma .env som sync_to_d1.py):
+Miljövariabler som krävs (läses ur processmiljön, se d1.py):
   CLOUDFLARE_ACCOUNT_ID
   CLOUDFLARE_API_TOKEN
   D1_DATABASE_UUID
