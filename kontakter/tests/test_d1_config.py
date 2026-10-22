@@ -30,25 +30,27 @@ def base_env(monkeypatch):
     monkeypatch.setenv("D1_DATABASE_UUID", "database")
 
 
-def test_d1_client_uses_w1_as_its_only_cloudflare_token_contract(monkeypatch):
+def test_d1_client_uses_cloudflare_api_token(monkeypatch):
     base_env(monkeypatch)
-    monkeypatch.setenv("CLOUDFLARE_API_TOKEN_W1", "w1-token")
-    monkeypatch.setenv("CLOUDFLARE_API_TOKEN_POLITIKER", "legacy-token")
+    monkeypatch.setenv("CLOUDFLARE_API_TOKEN", "cf-token")
+    monkeypatch.setenv("CLOUDFLARE_API_TOKEN_W1", "old-w1-token")
 
     client = d1.D1Client(session=DummySession())
 
-    assert client.token == "w1-token"
-    assert client.session.headers["Authorization"] == "Bearer w1-token"
+    assert client.token == "cf-token"
+    assert client.session.headers["Authorization"] == "Bearer cf-token"
 
 
-def test_legacy_politiker_token_does_not_fallback(monkeypatch):
+def test_old_token_names_do_not_fallback(monkeypatch):
     base_env(monkeypatch)
-    monkeypatch.delenv("CLOUDFLARE_API_TOKEN_W1", raising=False)
+    monkeypatch.delenv("CLOUDFLARE_API_TOKEN", raising=False)
+    monkeypatch.setenv("CLOUDFLARE_API_TOKEN_W1", "old-w1-token")
     monkeypatch.setenv("CLOUDFLARE_API_TOKEN_POLITIKER", "legacy-token")
 
     try:
         d1.D1Client(session=DummySession())
     except SystemExit as exc:
-        assert "CLOUDFLARE_API_TOKEN_W1" in str(exc)
+        assert "CLOUDFLARE_API_TOKEN" in str(exc)
+        assert "_W1" not in str(exc)
     else:
-        raise AssertionError("legacy Politiker token must not be accepted")
+        raise AssertionError("old token names must not be accepted")
