@@ -94,7 +94,7 @@ Containern talar vanlig HTTP på port 8787. Lägg den bakom en omvänd proxy med
   - Inloggningsförsök begränsas i en serialiserad Durable Object.
   - Användarnas e-postuppgifter och brevinnehåll krypteras med AES-GCM.
   - Ändrande anrop kräver same-origin, och svaren har strikt CSP.
-- **Imagen** bygger på `node:24-trixie-slim` (Node LTS på Debian stable), kör som användaren `node` och har en healthcheck. Den byggs i två steg, så att bara den neutraliserade källkoden hamnar i det färdiga lagret.
+- **Imagen** bygger på `node:24-trixie-slim` (Node LTS på Debian stable), kör som användaren `node` och har en healthcheck. Den innehåller bara källkod med platshållare; dina värden fylls i när containern startar.
 - **Begränsningar:** `wrangler dev` är en utvecklingsserver som kör en process på en maskin. Det räcker för en grupp eller förening, men ger inte Cloudflares skalning. Kontaktkatalogen med politiker ingår inte, utan fylls av administratören eller användarna.
 - **Felsökning:** `docker compose logs -f`. Administratören ser utskick, konton och statistik i adminvyn.
 

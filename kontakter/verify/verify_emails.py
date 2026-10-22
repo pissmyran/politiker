@@ -4,7 +4,7 @@
 Periodisk verifiering av e-postadresser i D1-tabellen `public_contacts`
 (politiker-projektet). Körs via cron/systemd-timer på en egen server — INTE
 i Cloudflare Workers, eftersom Cloudflare blockerar utgående port 25
-ovillkorligt (dokumenterat i politiker/README.md).
+ovillkorligt (se docs/kontakter.md).
 
 Tekniken: en "SMTP callout" per domän — koppla upp mot mottagardomänens
 MX-server på port 25, skicka EHLO/MAIL FROM/RCPT TO för varje adress på den

@@ -1,107 +1,72 @@
 # Arkitektur
 
-## Översikt
+## Runtime
 
-```text
-Browser
-  |
-  v
-access-index.ts
-  |
-  v
-index.ts
-  |     |       |        |          |
-  |     |       |        |          +--> Email
-  |     |       |        +------------> R2 attachments
-  |     |       +---------------------> KV sessions
-  |     +------------------------------> D1 application state
-  |
-  +--> Queue send jobs
-          |
-          +--> retries
-          +--> dead-letter queue
-          |
-          v
-     CredentialRateLimiter DO
-          |
-          v
-       mail delivery
-```
+Workern `politiker` startar i `app/src/access-index.ts` och konfigureras i `app/wrangler.jsonc`:
 
-## Request boundary
+| Bindning | Typ | Används till |
+| --- | --- | --- |
+| `DB` | D1 | Allt state, med migreringarna i `infra/migrations/` |
+| `SESSIONS` | KV | Sessioner |
+| `ATTACHMENTS` | R2 (`politiker-attachments`) | Bilagor |
+| `SEND_QUEUE` | Kö (`politiker-send-jobs`) | Utskick, ett i taget, upp till tio försök och sedan `politiker-send-jobs-dlq` |
+| `RATE_LIMITER` | Durable Object (`CredentialRateLimiter`) | Takten per e-postkonto |
+| `EMAIL` | Email | Systemmejl från `SYSTEM_FROM_ADDRESS` |
+| `ASSETS` | Statiska filer (`app/public/`) | Sidorna; Workern går först för `/`, `/api/*` och `/admin*` |
 
-`app/src/access-index.ts` är extern entrypoint. Requestpolicyn ska appliceras server-side innan applikationslogik eller assets svarar.
+Hemligheter: `MAIL_CRED_KEY` och `LETTER_DATA_KEY` (krypteringsnycklar), `SYSTEM_SMTP_PASSWORD`, `TURNSTILE_SECRET`, OAuth-klienternas hemligheter och valfritt `RESEND_API_KEY`.
 
-Känsliga API-svar ska fortsatt behandlas som icke-cachebar privat data.
+Cron `* * * * *` lägger om väntande utskick i kön. Den gör bara indexerade frågor med `LIMIT` och inget alls när inget väntar.
 
-## Auth och session
+Loggning: alla loggar (sampling 1, med anropsloggar), spårningar till 1 %, frågesträngar maskeras och Workers Issues är på. Inloggnings- och API-flöden kan bära känsliga parametrar, så maskeringen får aldrig stängas av.
 
-Sessioner ligger i KV, medan konton och övrig canonical applikationsstate ligger i D1. Det är en viktig gräns: sessioncache och persistent datamodell har olika konsistens- och livscykelkrav.
+## Koden
 
-Authändringar måste verifiera:
+- **`app/src/access-index.ts`** är den yttre gränsen och sätter policyn innan applikationen eller de statiska filerna svarar.
+- **`app/src/index.ts`** är applikationen: konton, inloggning, API-nycklar, kontakter, brev, bilagor, utskick, köns konsument, feedback och admin.
+- **`shared/`** är kod som både Workern och Docker-varianten använder: kryptering, TOTP, SMTP, Microsoft Graph, Resend och indatakontroller.
 
-- login/logout och sessionslivscykel,
-- lösenords-/TOTP-flöden där de berörs,
-- OAuth identity linking där det berörs,
-- access till privata API-routes.
+## Konton och sessioner
 
-## D1
+Konton och allt som hör till dem ligger i D1, sessionerna i KV. Inloggning sker med lösenord (med valfri TOTP) eller med Google eller Microsoft. Känsliga åtgärder, som att ändra ett sparat e-postkonto, kräver att inloggningen är högst 15 minuter gammal; annars ber sidan dig bekräfta igen.
 
-D1 är canonical datalager för applikationen. Queue, KV och Durable Objects ska inte skapa konkurrerande canonical kopior av samma affärsstate.
+## Det offentliga registret
 
-### Offentligt mottagarregister
+`public_contacts` är det gemensamma registret: politiker på alla nivåer, myndigheter, redaktioner, Svenska kyrkan och akademiker. `area_type` skiljer grupperna åt. Akademiker har dessutom lärosäte, enhet, titel, område och källsida. `public_contact_assignments` kopplar kommun- och regionpolitiker till nämnder och styrelser för filtrering på sakområde.
 
-`public_contacts` är den gemensamma modellen för offentliga mottagare. Politiska nivåer, media och akademi delar grundfält för namn, e-post, område/kategori och verifieringsstatus. Akademiposter kompletteras med organisation, enhet, titel, akademiskt fält och officiell käll-URL.
+Sökningen är `/api/public-contacts/search`; `/api/politicians/search` finns kvar som alias för äldre klienter.
 
-`public_contact_assignments` lagrar de politiska kommun-/regionrelationer som behövs för sakområdesfiltrering. Relationerna ska inte användas för att modellera akademiska ämnen.
+Registret fylls av verktygen i `kontakter/`; se [Kontaktregistret](kontakter.md).
 
-Den kanoniska sökvägen är `/api/public-contacts/search`. `/api/politicians/search` finns kvar som kompatibilitetsalias och ska inte användas av ny klientkod.
+## Egna kontakter och inledningar
 
-Akademiska e-postadresser får endast tas från officiellt publicerade yrkeskällor. Adresser ska inte konstrueras från namn eller adressmönster.
+Varje konto kan ha egna kontaktlistor. Återanvändbara inledningar ligger i `letter_intro_presets`; rubriken sparas i klartext och texten krypterad, precis som brevet.
 
-## Bilagor
+## Utskick
 
-R2 lagrar bilagor. D1 kan bära metadata/referenser medan objektbytes ligger i R2.
+1. Ett utskick sparas i D1 och läggs i kön.
+2. Köns konsument hämtar ett jobb i taget och frågar `CredentialRateLimiter` om e-postkontot får skicka nu.
+3. Brevet personaliseras i ordningen personlig hälsning, valda inledningar och brevtext (`personalizeLetter`), och skickas från användarens eget konto via SMTP, Google eller Microsoft.
 
-## Utskicksflöde
+Inledningarna sparas krypterat på utskicket (`send_jobs.intro_text`) när det startar, så att en senare ändring av en mall inte påverkar ett pågående utskick. Brevets innehåll raderas automatiskt efter den tid användaren valt: 5 minuter, 1 dag, 3 dagar eller 7 dagar efter att utskicket är klart.
 
-Ett utskick skapas som persistent applikationsstate och köas för asynkron bearbetning. Brevets originaltext hålls separat från valbara inledningar. Vid leverans använder `personalizeLetter` ordningen personlig hälsning → snapshot av valda inledningar → brevtext; samma personaliseringspunkt hanterar även `{GREETING}` och äldre `Hej [förnamn]!`-utkast.
+Kön och DLQ visar bara transportens tillstånd. Utskickets verkliga status finns i D1.
 
-```text
-persistent send state
-        |
-        v
-     Queue
-        |
-        v
-queue consumer
-        |
-        v
-CredentialRateLimiter
-        |
-        v
-provider / Email
-```
+## Takten
 
-Queue retries och DLQ representerar transport-/bearbetningsstate. Persistent D1-state behövs för att avgöra applikationens faktiska status.
+`CredentialRateLimiter` är en Durable Object per e-postkonto. Eftersom den hanterar ett anrop i taget kan flera samtidiga Worker-anrop aldrig tillsammans skicka fortare än leverantörens gräns. Den får aldrig ersättas av state i KV eller i processen.
 
-## Rate limiting
+## Säkerhetsgränser
 
-`CredentialRateLimiter` använder Durable Object för serialiserad koordinering per credential/mailkonto. Den designen skyddar mot samtidiga Worker-invocations som annars skulle kunna överskrida avsedd leveranstakt.
+- Internet → den yttre gränsen i `access-index.ts`.
+- Session eller API-nyckel → inloggningskontrollen.
+- Applikationen → D1, KV och R2.
+- Applikationen → kön → takten → e-postleverantören.
+- Admin → uttrycklig behörighetskontroll.
+- Känsliga API-svar cacheas aldrig.
 
-## Cron
+## Tema och PWA
 
-Cron-triggern kör varje minut och används för att fortsätta väntande arbete enligt applikationens körmodell. Cron ska inte introducera en separat state machine vid sidan av D1/queue.
+Det finns tre teman: `legacy` (standard), `forest` (med etiketten från `SITE_FAMILY`) och `blackout`. Valet sparas i `localStorage["<prefix>.theme"]` och cookien `<prefix>_theme`. Temaväljaren ligger längst ner på de publika sidorna. Temat ändrar bara utseendet; PolitikerKontakts egen gul-blå profil och statusfärger finns i alla teman.
 
-## Trust boundaries
-
-- Internet → accesslager
-- session/token → authkontroll
-- app → D1/KV/R2
-- app → Queue
-- queue consumer → rate limiter → mail/provider
-- adminfunktioner → explicit authorization
-
-## Failure model
-
-Vid leveransproblem ska både persistent send state och queue/DLQ-state undersökas. Att bara återköra en queue-operation utan att förstå persistent state kan ge dubblerad eller felaktig behandling.
+Sidan har ett webbmanifest, ikoner i 192 och 512 pixlar och en service worker som alltid hämtar från nätet och aldrig cachear sessioner, data, bilagor eller utskick. Den är bara till för att sidan ska kunna installeras.

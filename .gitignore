@@ -1,32 +1,34 @@
 node_modules/
 .wrangler/
-**/.dev.vars*
-!**/.dev.vars.example
-**/.env*
-!**/.env.example
 app/worker-configuration.d.ts
-*.log
-__pycache__/
-*.pyc
-.pytest_cache/
-.claude/
-kontakter/output/
-kontakter/vcf/
-kontakter/logs/
-app/coverage/
-app/lcov.info
-kontakter/coverage.xml
-kontakter/.coverage
-.coverage
 app/.wrangler-preview*.json
-.dev.vars*
-.env*
+*.log
 dist/
 build/
+
+# Local secrets
+.dev.vars*
+.env*
 !**/.dev.vars.example
 !**/.env.example
 
-# Local agent tooling (skills); not part of the source
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+kontakter/coverage.xml
+
+# Coverage
+app/coverage/
+app/lcov.info
+
+# Output from the contact tools
+kontakter/output/
+kontakter/vcf/
+kontakter/logs/
+
+# Local agent tooling; not part of the source
 .agents/
 .claude/
 skills-lock.json

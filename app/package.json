@@ -8,13 +8,7 @@
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:coverage": "c8 node --experimental-strip-types --test tests/*.test.ts",
     "typecheck": "wrangler types && tsc --noEmit",
-    "validate": "npm test && node --test ../scripts/verify-production.test.mjs && node --check public/theme.js && node --check public/access-routing.js && node --check public/app.js && node --check public/app-send.js && node --check public/recipient-filter-groups.js && node --check public/private-recipient-polish.js && node --check public/auth-autofill.js && node --check public/faq.js && node --check public/letter-import.js && node --check public/letter-intros.js && node --check public/letter-editor.js && node --check public/active-letter-import.js && node --check public/app-settings.js && node --check public/app-admin.js && node --check ../scripts/workers-build-production.mjs && node --check ../scripts/workers-build-preview.mjs && wrangler d1 migrations apply DB --local && wrangler types && tsc --noEmit && wrangler deploy --dry-run",
-    "deploy": "wrangler deploy --outdir dist",
-    "migrate:production": "wrangler d1 migrations apply DB --remote",
-    "verify:production": "node ../scripts/verify-production.mjs",
-    "release": "npm run validate && npm run migrate:production && npm run deploy && npm run verify:production",
-    "versions:upload": "wrangler versions upload --outdir dist",
-    "secret:set-mail-key": "wrangler secret put MAIL_CRED_KEY"
+    "validate": "npm test && node --test ../scripts/verify-production.test.mjs && for f in public/*.js; do node --check \"$f\" || exit 1; done && wrangler d1 migrations apply DB --local && wrangler types && tsc --noEmit && wrangler deploy --dry-run"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261018.1",

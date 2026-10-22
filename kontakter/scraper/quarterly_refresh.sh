@@ -44,7 +44,7 @@ python3 fetch_riksdagen_members.py
 echo "--- Synkar regeringens departement ---"
 python3 sync_regeringen.py
 
-echo "--- Hämtar Svenska kyrkans kyrkovalda (kyrkostyrelse + Uppsala stift) ---"
+echo "--- Hämtar Svenska kyrkans förtroendevalda (sidorna i kyrka.json) ---"
 python3 fetch_kyrka.py
 
 echo "--- Synkar nyhetsredaktionernas kontakter ---"

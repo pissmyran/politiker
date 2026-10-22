@@ -1,51 +1,42 @@
-# Dokumentation
-
-Navigationssida för Politiker.
-
-## Hitta rätt dokument
-
-| Om du behöver… | Läs |
-| --- | --- |
-| förstå runtime, bindings och subsystem | [Projektkontext](project-context.md) |
-| förstå requestflöden, state ownership och utskick | [Arkitektur](architecture.md) |
-| utveckla, testa, migrera, deploya eller felsöka | [Drift](operations.md) |
-
-## Systemkarta
+# Översikt
 
 ```text
-Browser
-  |
-  v
-app/src/access-index.ts
-  |
-  v
-app/src/index.ts
-  |
-  +--> D1: application state + public contact registry
-  +--> KV: sessions
-  +--> R2: attachments
-  +--> Queue: send jobs ---> DLQ
-  +--> Durable Object: CredentialRateLimiter
-  +--> Email binding
-  +--> Static assets
+Webbläsare
+    |
+    v
+app/src/access-index.ts    yttre gräns: routing och säkerhetshuvuden
+    |
+    v
+app/src/index.ts ──> D1         konton, brev, utskick, kontaktregistret
+    |            ──> KV         sessioner
+    |            ──> R2         bilagor
+    |            ──> Email      systemmejl
+    v
+Kö (SEND_QUEUE) ──> CredentialRateLimiter ──> din e-post (SMTP, Google, Microsoft)
+    |
+    └──> DLQ
 ```
 
-En cron trigger kör varje minut för att fortsätta väntande arbete enligt applikationens modell.
+Cron kör varje minut och lägger om väntande utskick i kön.
 
-## State ownership
+| Ämne | Sida |
+| --- | --- |
+| Bindningar, state, utskick, säkerhet och tema | [Arkitektur](architecture.md) |
+| Tester, migreringar, driftsättning och felsökning | [Drift](operations.md) |
+| Verktygen som fyller det offentliga kontaktregistret | [Kontaktregistret](kontakter.md) |
 
-- **D1**: canonical application state, inklusive `public_contacts` för politiker, media och akademiska mottagare.
-- **KV**: sessionsstate.
-- **R2**: bilagor.
-- **Queue/DLQ**: leveransarbete och retry/failure state.
-- **Durable Object**: serialiserad koordinering/rate limiting.
-- **Assets**: presentation.
+## Vem äger vilken data
 
-## Ändringskarta
+- **D1** är den enda sanningen: konton, brev, utskick, egna kontakter och det offentliga registret `public_contacts`.
+- **KV** innehåller bara sessioner.
+- **R2** innehåller bara bilagornas bytes; metadata ligger i D1.
+- **Kön och DLQ** är transport. De ersätter aldrig utskickens state i D1.
+- **Durable Object** `CredentialRateLimiter` styr takten per e-postkonto.
+- **De statiska filerna** är presentation.
 
-- auth/session/API → architecture + tests
-- D1-schema → migration + project-context + operations
-- utskick/queue/rate limiting → architecture + operations
-- R2/bilagor → architecture + storageverifiering
-- bindings/routes/cron → project-context
-- deploy/scripts → operations
+## Innan du ändrar något
+
+- **Inloggning, sessioner eller API:** läs [Arkitektur](architecture.md) och kör testerna.
+- **D1-schemat:** skriv en ny migrering i `infra/migrations/` och läs [Drift](operations.md).
+- **Utskick, kön eller takten:** läs [Arkitektur](architecture.md) och felsökningen i [Drift](operations.md).
+- **Kontaktregistret:** läs [Kontaktregistret](kontakter.md).
