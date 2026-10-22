@@ -1,7 +1,6 @@
 app/node_modules
 **/.wrangler
 kontakter
-forening
 docs
 scripts
 **/tests

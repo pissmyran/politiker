@@ -14,9 +14,9 @@ svaret. Använd ALDRIG rdlstatus=tjanst för den här synkens syfte.
 E-postadresser anges i formatet "namn[på]riksdagen.se" — byt bara ut
 "[på]" mot "@".
 
-Miljövariabler som krävs (samma .env som sync_to_d1.py):
+Miljövariabler som krävs (läses ur processmiljön, se d1.py):
   CLOUDFLARE_ACCOUNT_ID
-  CLOUDFLARE_API_TOKEN_W1
+  CLOUDFLARE_API_TOKEN
   D1_DATABASE_UUID
 """
 

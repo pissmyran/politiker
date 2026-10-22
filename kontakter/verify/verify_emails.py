@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 Periodisk verifiering av e-postadresser i D1-tabellen `public_contacts`
-(politiker-projektet). Körs via cron/systemd-timer på mp100 — INTE
+(politiker-projektet). Körs via cron/systemd-timer på en egen server — INTE
 i Cloudflare Workers, eftersom Cloudflare blockerar utgående port 25
-ovillkorligt (dokumenterat i politiker/README.md).
+ovillkorligt (se docs/kontakter.md).
 
 Tekniken: en "SMTP callout" per domän — koppla upp mot mottagardomänens
 MX-server på port 25, skicka EHLO/MAIL FROM/RCPT TO för varje adress på den
@@ -18,9 +18,9 @@ upptäcker "catch-all"-domäner genom att även testa en uppenbart påhittad
 adress per domän — om även den accepteras flaggas hela domänens resultat
 som osäkert (catchall_unverified) istället för falskt "valid".
 
-Miljövariabler som krävs (samma .env som sync_to_d1.py):
+Miljövariabler som krävs (läses ur processmiljön, se d1.py):
   CLOUDFLARE_ACCOUNT_ID
-  CLOUDFLARE_API_TOKEN_W1
+  CLOUDFLARE_API_TOKEN
   D1_DATABASE_UUID
 """
 

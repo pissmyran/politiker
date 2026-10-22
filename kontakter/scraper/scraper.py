@@ -519,7 +519,7 @@ async def scrape_namnmonster(context, namn, url, domain, section_start, section_
                 continue
             fornamn, efternamn = parts[0], parts[-1]
             # Hantera källtexter med felaktigt mellanslag i bindestrecksnamn,
-            # t.ex. "Per- Erik Eriksson" som egentligen är "Per-Erik Eriksson".
+            # t.ex. "Anna- Karin Exempel" som egentligen är "Anna-Karin Exempel".
             if fornamn.endswith("-") and len(parts) > 2:
                 fornamn += parts[1]
             local = f"{_email_local_part(fornamn)}.{_email_local_part(efternamn)}"
