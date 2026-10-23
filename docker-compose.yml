@@ -6,7 +6,7 @@
 # recipients yourself or import them as admin.
 services:
   politiker:
-    image: docker.io/driftaegis/politiker:0
+    image: docker.io/driftaegis/politiker:0@sha256:ad92868a0b467517266af6539d501a3062e9ec1b4b42232bebd07a804acdd628
     restart: unless-stopped
     ports:
       - "8787:8787"
