@@ -6,8 +6,8 @@
 [project]
 site_name = "Politiker"
 site_description = "Skriv till politiker från ditt eget e-postkonto."
-repo_url = "https://github.com/VineDrinker/politiker"
-repo_name = "VineDrinker/politiker"
+repo_url = "https://github.com/pissmyran/politiker"
+repo_name = "pissmyran/politiker"
 docs_dir = "site-docs"
 site_dir = "site"
 nav = [
@@ -19,7 +19,7 @@ nav = [
     { "Kontaktregistret" = "kontakter.md" },
   ] },
   { "Docker" = "docker.md" },
-  { "Källkod på GitHub" = "https://github.com/VineDrinker/politiker#readme" },
+  { "Källkod på GitHub" = "https://github.com/pissmyran/politiker#readme" },
 ]
 
 [project.theme]
@@ -66,7 +66,7 @@ toggle.name = "Följ systemets inställning"
 
 [[project.extra.social]]
 icon = "fontawesome/brands/github"
-link = "https://github.com/VineDrinker/politiker#readme"
+link = "https://github.com/pissmyran/politiker#readme"
 name = "Källkoden på GitHub"
 
 [project.markdown_extensions]

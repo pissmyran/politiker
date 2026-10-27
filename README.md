@@ -1,6 +1,6 @@
 # PolitikerKontakt
 
-**Dokumentation:** [vinedrinker.github.io/politiker](https://vinedrinker.github.io/politiker/) – start, dokumentation och Docker på en sida med sök.
+**Dokumentation:** [pissmyran.github.io/politiker](https://pissmyran.github.io/politiker/) – start, dokumentation och Docker på en sida med sök.
 
 PolitikerKontakt låter dig skriva till politiker, myndigheter, redaktioner och forskare från ditt eget e-postkonto. Du väljer mottagare ur ett offentligt register eller dina egna kontaktlistor, skriver brevet och skickar det. Varje mottagare får ett eget mejl från din adress.
 
@@ -54,7 +54,7 @@ Taggen `0` ger alla uppdateringar inom version 0; `X.Y` ger bara rättningar och
 
 ## Bidra
 
-Frågor och idéer tas i [Discussions](https://github.com/VineDrinker/.github/discussions), fel och förslag som issues här. Läs [CONTRIBUTING.md](https://github.com/VineDrinker/.github/blob/main/CONTRIBUTING.md) innan du öppnar en pull request. Säkerhetsproblem rapporteras privat via fliken Security.
+Frågor och idéer tas i [Discussions](https://github.com/pissmyran/.github/discussions), fel och förslag som issues här. Läs [CONTRIBUTING.md](https://github.com/pissmyran/.github/blob/main/CONTRIBUTING.md) innan du öppnar en pull request. Säkerhetsproblem rapporteras privat via fliken Security.
 
 ## Licens
 
