@@ -1,0 +1,143 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+inheritance: true
+
+reviews:
+  path_instructions:
+    - path: "app/src/{access-index,access-routing,secure-index,index,auth,oauth,api-keys}.ts"
+      instructions: |
+        Vid ändringar i routing eller autentisering, följ hela kedjan från
+        access-index via secure-index till index. Kontrollera att omskrivna
+        adminanrop fortfarande kräver administratör och att API-nycklar inte
+        får tillgång till operationer som kräver en färsk webbsession.
+        Kontrollera same-origin-skydd, OAuth-state och sessionsåterkallelse
+        efter lösenords- eller TOTP-byte. Autentisering ska läsas från
+        primär D1 innan eventuell replika används för mottagarmetadata.
+
+    - path: "app/src/{db,d1-session,private-contacts,recipient-address,mail-credentials,smtp-credential-test}.ts"
+      instructions: |
+        När kontoägda objekt läses eller ändras, kontrollera account_id
+        även när objektets id kommer från klienten. Följ kontoisoleringen
+        genom kontaktlistor, listmedlemskap och mailkopplingar.
+        Vid kontaktimport, kontrollera skiftlägesokänslig deduplicering,
+        kontaktgränsen och att ett misslyckat listbyte inte lämnar en delvis
+        ersatt lista. Behåll primärläsningar för behörigheter och ändringar;
+        begränsa replikaåtkomst till avsedda metadataanrop med D1-bookmark.
+        Vid SMTP-test eller lösenordsbyte, kontrollera ägarskap och
+        testbegränsning utan att exponera lagrade autentiseringsuppgifter.
+
+    - path: "{app/src/{send,send-queue,rate-limiter}.ts,shared/{types,provider-rates,smtp-failure}.ts}"
+      instructions: |
+        Vid ändringar i utskick, följ D1-status genom köläggning, konsumtion,
+        avbrott, omförsök och återhämtning. Kontrollera queuedAt mot queued_at
+        före sändning så att gamla köförsök inte återupplivas.
+        Kontrollera samtidiga jobb mot samma mailkoppling, dygnskvoter och
+        den delade CredentialRateLimiter-instansen per mailkoppling.
+        Skilj autentiseringsfel, tillfälliga SMTP-fel och permanenta
+        mottagarfel. Ett tillfälligt fel får inte markera adressen som död.
+        Granska fel mellan extern sändning, D1-skrivning och ack; anta inte
+        att köleverans eller SMTP ger exakt-en-gång-semantik.
+        Bedöm tester för dessa felvägar. Källtextsmatchning ensam bevisar
+        inte korrekt samtidighet eller säker omleverans.
+
+    - path: "app/src/{letter-privacy,letter-intro-presets}.ts"
+      instructions: |
+        När brev eller sparade inledningar ändras, kontrollera kryptering
+        och dekryptering med LETTER_DATA_KEY eller dess MAIL_CRED_KEY-fallback.
+        Kontrollera att kontogränser och befintligt krypterat innehåll bevaras.
+        Vid retention, följ content_delete_at och jobbstatus. R2-fel ska
+        lämna underlag för ett nytt städförsök innan D1-referenser tas bort.
+        Kontrollera att raderat brev- och inledningsinnehåll inte återställs
+        av backfill eller används i nya utskick.
+
+    - path: "shared/{smtp,graph-mail,resend,input-safety}.ts"
+      instructions: |
+        När mailtransport eller MIME-data ändras, kontrollera TLS före
+        SMTP-autentisering, adressvalidering och skydd mot headerinjektion.
+        Kontrollera filnamn, innehållstyper och bilagornas storleksgränser.
+        Vid Microsoft-tokenförnyelse, följ krypterad lagring hos anroparen
+        och bevara befintlig refresh token när svaret saknar en ny.
+        Vid leverantörsfel, kontrollera HTTP-/SMTP-status och feltypen som
+        anroparen använder. Resend 429 ska förbli ett särskiljbart kvotfel.
+        Felmeddelanden får inte exponera lösenord eller åtkomsttoken.
+
+    - path: "app/public/service-worker.js"
+      instructions: |
+        När fetch-hantering eller cache införs, kontrollera att privata
+        API-svar, sessioner, mailkopplingar och utskicksstatus inte lagras
+        i service-worker-cache. Nuvarande service worker är network-only.
+
+    - path: "infra/migrations/*.sql"
+      instructions: |
+        Vid schemaändringar, kontrollera D1/SQLite-kompatibilitet och
+        kompatibilitet med Worker och kontaktverktyg under uppgraderingen.
+        Bevara kontakt-id:n, verifieringsstatus, referenser och kontoisolering.
+        Kontrollera främmande nycklar, kaskadradering, unika villkor och
+        kontaktgränsens trigger när berörda tabeller ändras.
+        Om äldre vyer eller kolumner tas bort, kontrollera att aktiva läsare
+        och skrivare har uppgraderats. Kräv inte att redan avvecklade
+        kompatibilitetsvyer återinförs utan en konkret kvarvarande anropare.
+
+    - path: "kontakter/scraper/*.py"
+      instructions: |
+        När hämtning eller D1-synk ändras, följ normalisering av e-post,
+        områdestyp, parti och kontakt-id genom importen. Kontrollera
+        konfliktvillkor så att omkörningar inte skapar dubbletter eller
+        skriver över befintlig leveransverifiering oavsiktligt.
+        Vid D1-anrop, kontrollera SQL-parametrar, timeout och både HTTP-fel
+        och D1:s success-resultat. Partiella importfel får inte redovisas
+        som en helt lyckad synkronisering.
+        Om källinläsning ändras, behåll explicita externa källor via
+        CONTACT_SOURCES_DIR utan tyst fallback till exempeldata.
+
+    - path: "kontakter/verify/verify_emails.py"
+      instructions: |
+        När SMTP-probning ändras, kontrollera att 4xx, anslutningsfel och
+        uteblivna MX-svar inte felklassificeras som permanent döda adresser.
+        Ett accepterat svar från en catch-all-domän bevisar inte adressens
+        giltighet. Kontrollera begränsad återanslutning och att anslutningar
+        stängs även vid fel utan att städfelet döljer tidigare resultat.
+
+    - path: "{Dockerfile,docker-compose.yml,docker/**}"
+      instructions: |
+        Vid containerändringar, kontrollera att D1, KV, R2 och genererade
+        krypteringsnycklar bevaras under /data över omstart och uppgradering.
+        Befintliga nycklar får inte skrivas över. Kontrollera filbehörigheter
+        och import.env/settings.env utan att exponera hemligheter.
+        Kontrollera lokala bindningar, migrering före start och schemalagd
+        återköning med samma Worker som Cloudflare-varianten.
+        Behåll stöd för en tom installation utan andras Cloudflare-resurser.
+        TURNSTILE_SECRET=off och direktverifiering utan systemmejl är
+        avsiktliga självhostningslägen, inte i sig säkerhetsfel.
+
+    - path: "app/wrangler.jsonc"
+      instructions: |
+        När entrypoint eller bindningar ändras, kontrollera fetch-, queue-
+        och scheduled-kedjan samt DB, SESSIONS, ATTACHMENTS, SEND_QUEUE och
+        RATE_LIMITER mot kod och docker/wrangler.template.jsonc.
+        Kontrollera run_worker_first för API och admin så att statiska assets
+        inte kringgår Worker-skydd. Bevara avsiktligt avstängda workers_dev
+        och preview_urls samt maskering av frågesträngar i loggningen.
+        Vid ändrade köinställningar, kontrollera omförsök, dead-letter-kö
+        och återhämtning från kvarliggande D1-status.
+
+    - path: "{tools/render.mjs,cloudflare.example.env}"
+      instructions: |
+        När platshållare eller rendering ändras, kontrollera att varje
+        använd __NAME__ deklareras i cloudflare.example.env och att saknade
+        värden stoppar rendering utan att hemliga värden skrivs ut.
+        Kontrollera utdata- och overlay-sökvägar före radering eller kopiering.
+        Bevara källträdet och undvik kopiering in i utdatakatalogen själv.
+        Kontrollera tomma routes och att den renderade appkonfigurationen
+        fortfarande kan användas av både Cloudflare och Docker.
+
+    - path: "{app/package.json,.node-version,kontakter/{scraper,verify}/requirements.txt,kontakter/scraper/Dockerfile}"
+      instructions: |
+        Vid beroende- eller runtimeuppdateringar, kontrollera kompatibilitet
+        med Workers/workerd, cloudflare:sockets och befintliga Node-testkommandon.
+        Jämför app/package.json med app/package-lock.json och kontrollera
+        Wrangler-konfigurationen när typer eller runtime-API:er ändras.
+        Vid ändrad scraper-image eller Playwright-version, kontrollera
+        Python-beroenden och installationen av Chromium i entrypoint.sh.
+        Om ett säkerhetsrelaterat versionsgolv sänks eller tas bort,
+        kontrollera att berörda sårbara versioner fortfarande utesluts.
