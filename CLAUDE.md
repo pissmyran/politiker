@@ -34,10 +34,10 @@ Ett av fyra syskonrepon (`dumpen`, `jobb`, `klarsprak`, `politiker`) med samma m
 
 ## Kommandon
 
-Appen: installera, typkontrollera och testa:
+Appen: installera, typkontrollera och testa med Node-versionen i `.node-version` (krävs av `--experimental-strip-types`):
 
 ```bash
-cd app && npm ci && npm run typecheck && npm test
+cd app && npm ci && npm run typecheck && npx --yes node@"$(cat ../.node-version)" --experimental-strip-types --test tests/*.test.ts
 ```
 
 Appen: full kontroll med lokal migrering och torrkörd driftsättning, vid ändrad konfiguration eller migrering:
@@ -90,7 +90,7 @@ Kör också, för det du har ändrat: `npx --yes prettier@latest --check .` (ins
 - **Körning:** Workern körs i workerd via `wrangler dev --local` med allt tillstånd under `/data`. Entrypointen renderar källan med `tools/render.mjs` från containerns miljö med standardvärden som fungerar direkt, och genererar saknade krypteringsnycklar en gång till `/data`. Befintliga nycklar skrivs aldrig över. Bilderna startar tomma och läser aldrig från någons Cloudflare-resurser.
 - **Inställningar** kommer från `docker-compose.yml`, eller en gång från `/data/import.env`, som `import-settings.sh` slår ihop med `/data/settings.env` och sedan raderar. Icke-tomma compose-variabler vinner.
 - **Håll ihop:** `docker/README.md`, `docker-compose.yml` och `CHANGELOG.md` ska stämma med varandra. Dokumentationen ska ange Docker Hub-bilden att använda i compose, inte bygga från repot.
-- **Release:** höj `version.txt` i PR:en enligt semver och lägg till `## X.Y.Z – ÅÅÅÅ-MM-DD` i `CHANGELOG.md`. När PR:en når `main` skapar `release.yml` tagg och release och anropar `docker.yml`, som publicerar `X.Y.Z`, `X.Y`, `X` och `latest` till Docker Hub. En merge utan versionshöjning släpper inget. Fallerar Docker-jobbet kan ägaren köra om det; Claude ändrar inte workflowen.
+- **Release:** höj `version.txt` i PR:en enligt semver och lägg till `## X.Y.Z – ÅÅÅÅ-MM-DD` i `CHANGELOG.md`. När PR:en når `main` skapar `release.yml` tagg och release och anropar `docker.yml`, som publicerar `X.Y.Z`, `X.Y`, `X` och `latest` till Docker Hub. En merge utan versionshöjning släpper inget. Fallerar Docker-jobbet, kör om de fallerade jobben i release-körningen ("Re-run failed jobs"). Stannade releasen efter att taggen skapades, kör `docker.yml` manuellt (workflow_dispatch på taggen); annars publiceras ingen bild. Saknar sessionen behörighet, be ägaren göra det. Workflowfilerna ändras aldrig.
 
 ## Granskning i det här repot
 
