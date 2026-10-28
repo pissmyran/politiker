@@ -43,7 +43,7 @@ cd app && npm ci && npm run typecheck && npx --yes node@"$(cat ../.node-version)
 Appen: full kontroll med lokal migrering och torrkörd driftsättning, vid ändrad konfiguration eller migrering:
 
 ```bash
-cd app && npm run validate
+cd app && npx --yes -p node@"$(cat ../.node-version)" -- npm run validate
 ```
 
 Kontaktverktygen: installera och testa:
@@ -57,7 +57,7 @@ Kör också, för det du har ändrat: `npx --yes prettier@latest --check .` (ins
 ## Arkitektur
 
 - **Konton:** konton, OAuth (Google/Microsoft), TOTP och API-nycklar i D1, sessioner i KV.
-- **Utskick** går genom en kö (batch 1, DLQ) med användarens SMTP- eller OAuth-uppgifter. Durable Object `CredentialRateLimiter` begränsar inloggningsförsök och missbruk, och begränsar också utskick och SMTP-tester per uppgift (`send-queue.ts`, `mail-credentials.ts`).
+- **Utskick** går genom en kö (batch 1, DLQ) med användarens SMTP- eller OAuth-uppgifter. Durable Object `CredentialRateLimiter` begränsar inloggningsförsök och missbruk, och begränsar också utskick och SMTP-tester per mejlkonto (`credentialId` i `send-queue.ts` och `mail-credentials.ts`), så alla jobb på samma konto delar kvot.
 - **Cron** varje minut köar bara om väntande utskick, med indexerade frågor med LIMIT.
 - **Egen drift:** `TURNSTILE_SECRET=off` stänger av bot-kontrollen och konton verifieras direkt när ingen systemmejl finns. Det är avsiktliga lägen, inte säkerhetsfel.
 - **`kontakter/`** innehåller verktygen för kontaktdata. Deras utdata hamnar aldrig i repot.
