@@ -2,7 +2,13 @@
 
 Vägledning för Claude Code i `pissmyran/politiker`. Tjänsten politiker: brev till politiker från användarens egen e-post, plus en Docker-bild för egen drift.
 
-De gemensamma reglerna för alla repon finns i [GOVERNANCE.md](https://github.com/pissmyran/.github/blob/main/GOVERNANCE.md) i `pissmyran/.github`. Kärnreglerna nedan är en ordagrann kopia på engelska. Jämför versionen i markeringen med källan i början av varje session (`curl -sS https://raw.githubusercontent.com/pissmyran/.github/main/GOVERNANCE.md`); är kopian äldre, uppdatera den först i en egen PR (`docs: sync core rules from .github`).
+De gemensamma reglerna för alla repon finns i [GOVERNANCE.md](https://github.com/pissmyran/.github/blob/main/GOVERNANCE.md) i `pissmyran/.github`. Kärnreglerna nedan är en ordagrann kopia. Jämför i början av varje session versionen i markeringen med källan:
+
+```sh
+curl -fsS https://raw.githubusercontent.com/pissmyran/.github/main/GOVERNANCE.md
+```
+
+Är kopian äldre, uppdatera den först i en egen PR (`docs: sync core rules from .github`).
 
 ## Kärnregler
 
@@ -102,18 +108,80 @@ Kör också, för det du har ändrat: `npx --yes prettier@latest --check .` (ins
 - **Sourcery och Codex:** granskar också, som GitHub-appar utan egen konfiguration här, och de granskar även dokumentation. Behandla deras trådar som CodeRabbits.
 - **Extra noggrant:** inloggning och OAuth, utskickskön, krypterade uppgifter, kontaktverktygen och migreringar i `infra/migrations/`.
 
-## GitHub från sessionen
+## Token optimizer
 
-GraphQL är avstängt, så `gh pr` och `gh issue` fungerar inte. Använd REST:
+- **What it is:** the platform-skills token optimizer runs in audit mode. `.token-optimizer.yaml` holds the settings, `.token-optimizer/optimize.sh` is the hook script and `.claude/agents/platform-bulk-reader.md` is the cheap reader agent.
+- **What it does:** a `PreToolUse` hook in `.claude/settings.json` logs oversized reads, and shell calls it cannot classify, to `.token-optimizer/decisions.log` (git-ignored). The log never holds command text. The hook never blocks a read.
+- **Requirements:** `jq` and mikefarah `yq` v4 (the Python `yq` does not work). Create the git-ignored state directory once with `mkdir -p .token-optimizer/state`.
+- **Local changes:** `optimize.sh` differs from the skill's original in two places: it never writes command text to the log, and it replaces control characters and caps field length in `log_line`. The hook command starts from `$CLAUDE_PROJECT_DIR`. Reapply these if the script is updated from the skill.
+- **Changing it:** switch `mode` to `redirect` only after `.token-optimizer/probe/run-probe.sh` has verified delegation. Set `enabled: false` to turn it off.
 
-- Öppna PR: `gh api repos/pissmyran/politiker/pulls -f base=main -f head=<gren> -f title='…' -f body='…'`
-- PR från gren: `gh api 'repos/pissmyran/politiker/pulls?head=pissmyran:<gren>&state=open'`
-- Issue: `gh api repos/pissmyran/politiker/issues/<n>` och `…/issues/<n>/comments`
-- Granskningstrådar: `gh api repos/pissmyran/politiker/pulls/<n>/ccr/review_threads`
-- Svara i tråd: `gh api repos/pissmyran/politiker/pulls/<n>/comments/<id>/replies -f body='…'`
-- Lös tråd: `gh api -X POST repos/pissmyran/politiker/pulls/<n>/ccr/comments/<id>/resolve`
-- Kontroller: `gh api repos/pissmyran/politiker/commits/<sha>/check-runs`
-- Auto-merge på: `gh api -X PUT repos/pissmyran/politiker/pulls/<n>/ccr/auto_merge -f merge_method=squash`
-- Är PR:en redan klar att mergas (auto-merge vägras då), squash-merga direkt: `gh api -X PUT repos/pissmyran/politiker/pulls/<n>/merge -f merge_method=squash`
-- Stäng PR: `gh api -X PATCH repos/pissmyran/politiker/pulls/<n> -f state=closed`
-- Radera gren: GitHub raderar grenen vid merge. En stängd PR:s gren raderas med `git push origin --delete <gren>` (API-vägen är spärrad).
+## GitHub från sandlådan
+
+Sandlådan lägger in agentens fine-grained token för `github.com` och `api.github.com`, så `git` och `gh` fungerar som vanligt. Token når bara den här agentens repon.
+
+Öppna en PR:
+
+```sh
+gh pr create --base main --title '<title>' --body '<body>'
+```
+
+Visa kontrollerna på en PR:
+
+```sh
+gh pr checks <n>
+```
+
+Lista granskningskommentarerna på rader (varje `id` används för svar):
+
+```sh
+gh api repos/pissmyran/politiker/pulls/<n>/comments
+```
+
+Svara på en granskningskommentar:
+
+```sh
+gh api repos/pissmyran/politiker/pulls/<n>/comments/<id>/replies -f body='<reply>'
+```
+
+Lista granskningstrådarna med nod-id (`id`) och första kommentaren:
+
+```sh
+gh api graphql -f query='query { repository(owner: "pissmyran", name: "politiker") { pullRequest(number: <n>) { reviewThreads(first: 100) { nodes { id isResolved comments(first: 1) { nodes { databaseId body } } } } } } }'
+```
+
+Lös en granskningstråd med trådens nod-id, inte kommentarens id:
+
+```sh
+gh api graphql -f query='mutation($id: ID!) { resolveReviewThread(input: {threadId: $id}) { thread { isResolved } } }' -f id='<thread-id>'
+```
+
+Slå på auto-merge och radera grenen efter merge:
+
+```sh
+gh pr merge <n> --auto --squash --delete-branch
+```
+
+Stäng en PR och radera dess gren:
+
+```sh
+gh pr close <n> --delete-branch
+```
+
+Lista Dependabot-larm:
+
+```sh
+gh api repos/pissmyran/politiker/dependabot/alerts
+```
+
+Lista kodskanningslarm:
+
+```sh
+gh api repos/pissmyran/politiker/code-scanning/alerts
+```
+
+Lista larm från hemlighetsskanning:
+
+```sh
+gh api repos/pissmyran/politiker/secret-scanning/alerts
+```
