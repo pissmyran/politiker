@@ -19,6 +19,14 @@ nav = [
     { "Kontaktregistret" = "kontakter.md" },
   ] },
   { "Docker" = "docker.md" },
+  { "English" = [
+    { "Home" = "eng/index.md" },
+    { "Overview" = "eng/oversikt.md" },
+    { "Architecture" = "eng/architecture.md" },
+    { "Operations" = "eng/operations.md" },
+    { "The contact register" = "eng/kontakter.md" },
+    { "Docker" = "eng/docker.md" },
+  ] },
   { "Källkod på GitHub" = "https://github.com/pissmyran/politiker#readme" },
 ]
 
@@ -63,6 +71,17 @@ primary = "deep-purple"
 accent = "deep-purple"
 toggle.icon = "lucide/moon"
 toggle.name = "Följ systemets inställning"
+
+# Language selector: Swedish is the original, docs/eng/ the English mirror.
+[[project.extra.alternate]]
+name = "Svenska"
+link = "https://pissmyran.github.io/politiker/"
+lang = "sv"
+
+[[project.extra.alternate]]
+name = "English"
+link = "https://pissmyran.github.io/politiker/eng/"
+lang = "en"
 
 [[project.extra.social]]
 icon = "fontawesome/brands/github"
