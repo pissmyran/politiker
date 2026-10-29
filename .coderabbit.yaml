@@ -6,138 +6,138 @@ reviews:
   path_instructions:
     - path: "app/src/{access-index,access-routing,secure-index,index,auth,oauth,api-keys}.ts"
       instructions: |
-        Vid ändringar i routing eller autentisering, följ hela kedjan från
-        access-index via secure-index till index. Kontrollera att omskrivna
-        adminanrop fortfarande kräver administratör och att API-nycklar inte
-        får tillgång till operationer som kräver en färsk webbsession.
-        Kontrollera same-origin-skydd, OAuth-state och sessionsåterkallelse
-        efter lösenords- eller TOTP-byte. Autentisering ska läsas från
-        primär D1 innan eventuell replika används för mottagarmetadata.
+        When routing or authentication changes, follow the whole chain from
+        access-index through secure-index to index. Check that rewritten
+        admin calls still require an administrator and that API keys never
+        reach operations that need a fresh web session.
+        Check same-origin protection, OAuth state and session revocation
+        after a password or TOTP change. Authentication must be read from the
+        primary D1 before any replica is used for recipient metadata.
 
     - path: "app/src/{db,d1-session,private-contacts,recipient-address,mail-credentials,smtp-credential-test}.ts"
       instructions: |
-        När kontoägda objekt läses eller ändras, kontrollera account_id
-        även när objektets id kommer från klienten. Följ kontoisoleringen
-        genom kontaktlistor, listmedlemskap och mailkopplingar.
-        Vid kontaktimport, kontrollera skiftlägesokänslig deduplicering,
-        kontaktgränsen och att ett misslyckat listbyte inte lämnar en delvis
-        ersatt lista. Behåll primärläsningar för behörigheter och ändringar;
-        begränsa replikaåtkomst till avsedda metadataanrop med D1-bookmark.
-        Vid SMTP-test eller lösenordsbyte, kontrollera ägarskap och
-        testbegränsning utan att exponera lagrade autentiseringsuppgifter.
+        When account-owned objects are read or changed, check account_id
+        even when the object's id comes from the client. Follow account isolation
+        through contact lists, list membership and mail connections.
+        On contact import, check case-insensitive deduplication,
+        the contact limit and that a failed list replacement never leaves a partly
+        replaced list. Keep primary reads for permissions and changes;
+        limit replica access to the intended metadata calls with a D1 bookmark.
+        On an SMTP test or password change, check ownership and
+        test limits without exposing stored credentials.
 
     - path: "{app/src/{send,send-queue,rate-limiter}.ts,shared/{types,provider-rates,smtp-failure}.ts}"
       instructions: |
-        Vid ändringar i utskick, följ D1-status genom köläggning, konsumtion,
-        avbrott, omförsök och återhämtning. Kontrollera queuedAt mot queued_at
-        före sändning så att gamla köförsök inte återupplivas.
-        Kontrollera samtidiga jobb mot samma mailkoppling, dygnskvoter och
-        den delade CredentialRateLimiter-instansen per mailkoppling.
-        Skilj autentiseringsfel, tillfälliga SMTP-fel och permanenta
-        mottagarfel. Ett tillfälligt fel får inte markera adressen som död.
-        Granska fel mellan extern sändning, D1-skrivning och ack; anta inte
-        att köleverans eller SMTP ger exakt-en-gång-semantik.
-        Bedöm tester för dessa felvägar. Källtextsmatchning ensam bevisar
-        inte korrekt samtidighet eller säker omleverans.
+        When sending changes, follow the D1 status through enqueueing, consumption,
+        cancellation, retries and recovery. Check queuedAt against queued_at
+        before sending so old queue attempts are never revived.
+        Check concurrent jobs on the same mail connection, daily quotas and
+        the shared CredentialRateLimiter instance per mail connection.
+        Separate authentication errors, temporary SMTP errors and permanent
+        recipient errors. A temporary error must never mark the address as dead.
+        Review failures between the external send, the D1 write and the ack; do not assume
+        that queue delivery or SMTP gives exactly-once semantics.
+        Assess tests for these failure paths. Matching source text alone does not prove
+        correct concurrency or safe redelivery.
 
     - path: "app/src/{letter-privacy,letter-intro-presets}.ts"
       instructions: |
-        När brev eller sparade inledningar ändras, kontrollera kryptering
-        och dekryptering med LETTER_DATA_KEY eller dess MAIL_CRED_KEY-fallback.
-        Kontrollera att kontogränser och befintligt krypterat innehåll bevaras.
-        Vid retention, följ content_delete_at och jobbstatus. R2-fel ska
-        lämna underlag för ett nytt städförsök innan D1-referenser tas bort.
-        Kontrollera att raderat brev- och inledningsinnehåll inte återställs
-        av backfill eller används i nya utskick.
+        When letters or saved introductions change, check encryption
+        and decryption with LETTER_DATA_KEY or its MAIL_CRED_KEY fallback.
+        Check that account boundaries and existing encrypted content are kept.
+        For retention, follow content_delete_at and the job status. R2 errors must
+        leave enough state for a new cleanup attempt before D1 references are removed.
+        Check that deleted letter and introduction content is never restored
+        by a backfill or used in new sends.
 
     - path: "shared/{smtp,graph-mail,resend,input-safety}.ts"
       instructions: |
-        När mailtransport eller MIME-data ändras, kontrollera TLS före
-        SMTP-autentisering, adressvalidering och skydd mot headerinjektion.
-        Kontrollera filnamn, innehållstyper och bilagornas storleksgränser.
-        Vid Microsoft-tokenförnyelse, följ krypterad lagring hos anroparen
-        och bevara befintlig refresh token när svaret saknar en ny.
-        Vid leverantörsfel, kontrollera HTTP-/SMTP-status och feltypen som
-        anroparen använder. Resend 429 ska förbli ett särskiljbart kvotfel.
-        Felmeddelanden får inte exponera lösenord eller åtkomsttoken.
+        When mail transport or MIME data changes, check TLS before
+        SMTP authentication, address validation and protection against header injection.
+        Check file names, content types and attachment size limits.
+        On Microsoft token refresh, follow the encrypted storage in the caller
+        and keep the existing refresh token when the response has no new one.
+        On provider errors, check the HTTP/SMTP status and the error type
+        the caller uses. Resend 429 must remain a distinguishable quota error.
+        Error messages must never expose passwords or access tokens.
 
     - path: "app/public/service-worker.js"
       instructions: |
-        När fetch-hantering eller cache införs, kontrollera att privata
-        API-svar, sessioner, mailkopplingar och utskicksstatus inte lagras
-        i service-worker-cache. Nuvarande service worker är network-only.
+        When fetch handling or a cache is introduced, check that private
+        API responses, sessions, mail connections and send status are never stored
+        in the service worker cache. The current service worker is network-only.
 
     - path: "infra/migrations/*.sql"
       instructions: |
-        Vid schemaändringar, kontrollera D1/SQLite-kompatibilitet och
-        kompatibilitet med Worker och kontaktverktyg under uppgraderingen.
-        Bevara kontakt-id:n, verifieringsstatus, referenser och kontoisolering.
-        Kontrollera främmande nycklar, kaskadradering, unika villkor och
-        kontaktgränsens trigger när berörda tabeller ändras.
-        Om äldre vyer eller kolumner tas bort, kontrollera att aktiva läsare
-        och skrivare har uppgraderats. Kräv inte att redan avvecklade
-        kompatibilitetsvyer återinförs utan en konkret kvarvarande anropare.
+        On schema changes, check D1/SQLite compatibility and
+        compatibility with the Worker and the contact tools during the upgrade.
+        Keep contact ids, verification status, references and account isolation.
+        Check foreign keys, cascading deletes, unique constraints and
+        the contact limit trigger when the affected tables change.
+        If older views or columns are removed, check that active readers
+        and writers have been upgraded. Do not require already retired
+        compatibility views to come back without a concrete remaining caller.
 
     - path: "kontakter/scraper/*.py"
       instructions: |
-        När hämtning eller D1-synk ändras, följ normalisering av e-post,
-        områdestyp, parti och kontakt-id genom importen. Kontrollera
-        konfliktvillkor så att omkörningar inte skapar dubbletter eller
-        skriver över befintlig leveransverifiering oavsiktligt.
-        Vid D1-anrop, kontrollera SQL-parametrar, timeout och både HTTP-fel
-        och D1:s success-resultat. Partiella importfel får inte redovisas
-        som en helt lyckad synkronisering.
-        Om källinläsning ändras, behåll explicita externa källor via
-        CONTACT_SOURCES_DIR utan tyst fallback till exempeldata.
+        When fetching or the D1 sync changes, follow the normalization of email,
+        area type, party and contact id through the import. Check
+        conflict conditions so reruns never create duplicates or
+        accidentally overwrite existing delivery verification.
+        On D1 calls, check SQL parameters, timeouts and both HTTP errors
+        and D1's success result. Partial import failures must never be reported
+        as a fully successful sync.
+        If source loading changes, keep explicit external sources through
+        CONTACT_SOURCES_DIR without a silent fallback to sample data.
 
     - path: "kontakter/verify/verify_emails.py"
       instructions: |
-        När SMTP-probning ändras, kontrollera att 4xx, anslutningsfel och
-        uteblivna MX-svar inte felklassificeras som permanent döda adresser.
-        Ett accepterat svar från en catch-all-domän bevisar inte adressens
-        giltighet. Kontrollera begränsad återanslutning och att anslutningar
-        stängs även vid fel utan att städfelet döljer tidigare resultat.
+        When SMTP probing changes, check that 4xx, connection errors and
+        missing MX answers are never misclassified as permanently dead addresses.
+        An accepted answer from a catch-all domain does not prove the address
+        is valid. Check bounded reconnects and that connections are
+        closed even on errors without the cleanup error hiding earlier results.
 
     - path: "{Dockerfile,docker-compose.yml,docker/**}"
       instructions: |
-        Vid containerändringar, kontrollera att D1, KV, R2 och genererade
-        krypteringsnycklar bevaras under /data över omstart och uppgradering.
-        Befintliga nycklar får inte skrivas över. Kontrollera filbehörigheter
-        och import.env/settings.env utan att exponera hemligheter.
-        Kontrollera lokala bindningar, migrering före start och schemalagd
-        återköning med samma Worker som Cloudflare-varianten.
-        Behåll stöd för en tom installation utan andras Cloudflare-resurser.
-        TURNSTILE_SECRET=off och direktverifiering utan systemmejl är
-        avsiktliga självhostningslägen, inte i sig säkerhetsfel.
+        When the container changes, check that D1, KV, R2 and the generated
+        encryption keys survive under /data across restarts and upgrades.
+        Existing keys must never be overwritten. Check file permissions
+        and import.env/settings.env without exposing secrets.
+        Check local bindings, migration before start and scheduled
+        requeuing with the same Worker as the Cloudflare variant.
+        Keep support for an empty installation without other people's Cloudflare resources.
+        TURNSTILE_SECRET=off and direct verification without system mail are
+        intentional self-hosting modes, not security defects in themselves.
 
     - path: "app/wrangler.jsonc"
       instructions: |
-        När entrypoint eller bindningar ändras, kontrollera fetch-, queue-
-        och scheduled-kedjan samt DB, SESSIONS, ATTACHMENTS, SEND_QUEUE och
-        RATE_LIMITER mot kod och docker/wrangler.template.jsonc.
-        Kontrollera run_worker_first för API och admin så att statiska assets
-        inte kringgår Worker-skydd. Bevara avsiktligt avstängda workers_dev
-        och preview_urls samt maskering av frågesträngar i loggningen.
-        Vid ändrade köinställningar, kontrollera omförsök, dead-letter-kö
-        och återhämtning från kvarliggande D1-status.
+        When the entrypoint or bindings change, check the fetch, queue
+        and scheduled chain and DB, SESSIONS, ATTACHMENTS, SEND_QUEUE and
+        RATE_LIMITER against the code and docker/wrangler.template.jsonc.
+        Check run_worker_first for the API and admin so static assets
+        never bypass the Worker's protection. Keep the intentionally disabled workers_dev
+        and preview_urls and the masking of query strings in logs.
+        When queue settings change, check retries, the dead-letter queue
+        and recovery from lingering D1 status.
 
     - path: "{tools/render.mjs,cloudflare.example.env}"
       instructions: |
-        När platshållare eller rendering ändras, kontrollera att varje
-        använd __NAME__ deklareras i cloudflare.example.env och att saknade
-        värden stoppar rendering utan att hemliga värden skrivs ut.
-        Kontrollera utdata- och overlay-sökvägar före radering eller kopiering.
-        Bevara källträdet och undvik kopiering in i utdatakatalogen själv.
-        Kontrollera tomma routes och att den renderade appkonfigurationen
-        fortfarande kan användas av både Cloudflare och Docker.
+        When placeholders or rendering change, check that every
+        __NAME__ in use is declared in cloudflare.example.env and that missing
+        values stop rendering without printing secret values.
+        Check output and overlay paths before deleting or copying.
+        Keep the source tree intact and avoid copying into the output directory itself.
+        Check empty routes and that the rendered app configuration
+        still works for both Cloudflare and Docker.
 
     - path: "{app/package.json,.node-version,kontakter/{scraper,verify}/requirements.txt,kontakter/scraper/Dockerfile}"
       instructions: |
-        Vid beroende- eller runtimeuppdateringar, kontrollera kompatibilitet
-        med Workers/workerd, cloudflare:sockets och befintliga Node-testkommandon.
-        Jämför app/package.json med app/package-lock.json och kontrollera
-        Wrangler-konfigurationen när typer eller runtime-API:er ändras.
-        Vid ändrad scraper-image eller Playwright-version, kontrollera
-        Python-beroenden och installationen av Chromium i entrypoint.sh.
-        Om ett säkerhetsrelaterat versionsgolv sänks eller tas bort,
-        kontrollera att berörda sårbara versioner fortfarande utesluts.
+        On dependency or runtime updates, check compatibility
+        with Workers/workerd, cloudflare:sockets and the existing Node test commands.
+        Compare app/package.json with app/package-lock.json and check the
+        Wrangler configuration when types or runtime APIs change.
+        When the scraper image or Playwright version changes, check the
+        Python dependencies and the Chromium install in entrypoint.sh.
+        If a security-related version floor is lowered or removed,
+        check that the affected vulnerable versions are still excluded.
