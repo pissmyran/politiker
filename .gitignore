@@ -30,10 +30,16 @@ kontakter/logs/
 
 # Local agent tooling; not part of the source
 .agents/
-.claude/
+.claude/*
 skills-lock.json
 
 # Documentation site (tools/docs-site.mjs, zensical build)
 site-docs/
 site/
 .venv-docs/
+.token-optimizer/decisions.log
+.token-optimizer/state/
+.token-optimizer/probe/
+!.token-optimizer/optimize.sh
+!.claude/settings.json
+!.claude/agents/
