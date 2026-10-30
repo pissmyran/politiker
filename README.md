@@ -56,6 +56,11 @@ Taggen `0` ger alla uppdateringar inom version 0; `X.Y` ger bara rättningar och
 
 Frågor och idéer tas i [Discussions](https://github.com/pissmyran/.github/discussions), fel och förslag som issues här. Läs [CONTRIBUTING.md](https://github.com/pissmyran/.github/blob/main/CONTRIBUTING.md) innan du öppnar en pull request. Säkerhetsproblem rapporteras privat via fliken Security.
 
+CodeRabbit ärver den centrala konfigurationen i `pissmyran/coderabbit/.coderabbit.yaml`
+via `inheritance: true`. De lokala granskningsråden omfattar även bilagor och
+dokumentimport, webbläsarbeteende och tillgänglighet, apptester, återhämtning av kön,
+migreringar, låsfiler och den engelska dokumentationen. Se [drift](docs/operations.md#konfiguration-av-kodgranskning).
+
 ## Licens
 
 MIT, se [LICENSE](LICENSE).

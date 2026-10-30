@@ -75,3 +75,22 @@ Kontrollera bindningen, objektnyckeln och kopplingen i D1 innan något raderas e
 Kontrollera i den här ordningen: route, sessionen i KV, kontot i D1 och sist lösenords-, TOTP- eller OAuth-flödet. Gör aldrig en privat route publik för att lösa ett inloggningsfel.
 
 Lägg aldrig inloggningsuppgifter, nycklar, mejlinnehåll eller privata API-data i loggar.
+
+## Konfiguration av kodgranskning
+
+`.coderabbit.yaml` använder `inheritance: true` för att ärva
+`pissmyran/coderabbit/.coderabbit.yaml`. Bara projektspecifika granskningsråd finns
+lokalt. De omfattar även bilagor och dokumentimport, webbläsarbeteende och
+tillgänglighet, apptester, återhämtning av kön, migreringar, låsfiler och spegeln
+under `docs/eng`.
+
+Enligt [CodeRabbits arvsregler](https://docs.coderabbit.ai/configuration/configuration-inheritance)
+behålls unika centrala listposter, medan en lokal post med samma `path` ersätter
+den centrala posten. Överlappande men olika sökvägsmönster behålls båda.
+Skannrar, granskningsomfattning, rådgivande kontroller samt avstängda automatiska
+godkännanden och kreditanvändande funktioner styrs fortsatt centralt.
+
+Vid ändringar: validera YAML-syntax och dubbla nycklar, kontrollera mot
+[aktuellt schema](https://coderabbit.ai/integrations/schema.v2.json) och kontrollera
+att varje sökvägsmönster täcker avsedda versionshanterade filer. Jämför med den
+centrala konfigurationen så att unika säkerhetsråd bevaras vid sammanslagningen.

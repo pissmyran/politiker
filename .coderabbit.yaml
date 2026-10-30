@@ -1,5 +1,7 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 
+# Inherit shared settings from pissmyran/coderabbit/.coderabbit.yaml.
+# Keep only PolitikerKontakt-specific review guidance here.
 inheritance: true
 
 reviews:
@@ -39,6 +41,8 @@ reviews:
         that queue delivery or SMTP gives exactly-once semantics.
         Assess tests for these failure paths. Matching source text alone does not prove
         correct concurrency or safe redelivery.
+        When scheduled recovery changes, check that queries remain indexed
+        and bounded with LIMIT and do no work when no jobs are waiting.
 
     - path: "app/src/{letter-privacy,letter-intro-presets}.ts"
       instructions: |
@@ -61,6 +65,29 @@ reviews:
         the caller uses. Resend 429 must remain a distinguishable quota error.
         Error messages must never expose passwords or access tokens.
 
+    - path: "app/src/{attachments,document-parsing}.ts"
+      instructions: |
+        When attachments or document conversion change, trace untrusted files
+        through validation, conversion, storage and rendering.
+        Check size limits before expensive decoding or conversion.
+        Check that converted HTML rejects executable markup and unsafe URLs.
+        Follow attachment ownership through the API caller, D1 metadata and
+        the R2 object key before reads, replacement or deletion.
+        Review partial failures for lost references or orphaned objects.
+        Never include document contents in logs or diagnostic responses.
+
+    - path: "app/public/*.{js,html,css}"
+      instructions: |
+        When browser behavior changes, check the actual API contract and
+        authentication failure handling.
+        Check that imported letters, recipient data and provider errors cannot
+        introduce executable HTML.
+        Client-side visibility is not authorization; follow sensitive actions
+        to their server-side checks.
+        For changed controls, check keyboard operation, accessible names and
+        focus handling. Report a concrete barrier, not a style preference.
+        Check that theme changes preserve readable text and status indicators.
+
     - path: "app/public/service-worker.js"
       instructions: |
         When fetch handling or a cache is introduced, check that private
@@ -77,6 +104,8 @@ reviews:
         If older views or columns are removed, check that active readers
         and writers have been upgraded. Do not require already retired
         compatibility views to come back without a concrete remaining caller.
+        Never edit an applied migration; add a new migration.
+        For destructive changes, check the documented deployment order.
 
     - path: "kontakter/scraper/*.py"
       instructions: |
@@ -131,7 +160,7 @@ reviews:
         Check empty routes and that the rendered app configuration
         still works for both Cloudflare and Docker.
 
-    - path: "{app/package.json,.node-version,kontakter/{scraper,verify}/requirements.txt,kontakter/scraper/Dockerfile}"
+    - path: "{app/package.json,app/package-lock.json,.node-version,kontakter/{scraper,verify}/requirements.txt,kontakter/scraper/Dockerfile}"
       instructions: |
         On dependency or runtime updates, check compatibility
         with Workers/workerd, cloudflare:sockets and the existing Node test commands.
@@ -141,3 +170,23 @@ reviews:
         Python dependencies and the Chromium install in entrypoint.sh.
         If a security-related version floor is lowered or removed,
         check that the affected vulnerable versions are still excluded.
+
+    - path: "app/tests/**"
+      instructions: |
+        When app tests change, use the existing Node test runner and the
+        TypeScript execution mode declared in app/package.json.
+        For changed authentication, sending or retention behavior, check
+        negative cases, account isolation and relevant failure boundaries.
+        Queue recovery tests must distinguish stale attempts from current jobs.
+        Do not accept source-text assertions as proof of runtime authorization,
+        concurrency safety or safe queue redelivery.
+
+    - path: "{README.md,AGENTS.md,docker/README.md,docs/**/*.md,zensical.toml}"
+      instructions: |
+        When documentation changes, preserve the Swedish documentation and
+        its English mirror under docs/eng in the same PR.
+        README.md maps to docs/eng/index.md; docker/README.md maps to
+        docs/eng/docker.md; other documentation pages retain their names.
+        Check both navigation sections in zensical.toml for new pages.
+        Keep AGENTS.md instructions and configuration comments in English.
+        Do not require a docs/sv directory; this repository uses docs/eng.

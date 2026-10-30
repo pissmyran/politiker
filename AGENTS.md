@@ -43,3 +43,12 @@ cd kontakter && pip install -r requirements-dev.txt requests pypdf dnspython && 
 - **Dokumentationen** publiceras också under `/docs` av appens egen Worker: Workers Builds kör `node tools/render.mjs - build && (sh tools/docs-cloudflare.sh build/app/public || echo "docs skipped")`, som lägger till en `/docs/*`-regel i `_headers` vars CSP tillåter sajtens inline-skript med hash.
 - **Release:** versionen finns i `version.txt`.
 - **Extra noggrant:** inloggning och OAuth, utskickskön, krypterade uppgifter, kontaktverktygen och migreringar.
+
+## Repository review guidance
+
+`.coderabbit.yaml` inherits from `pissmyran/coderabbit/.coderabbit.yaml` with
+`inheritance: true`. Keep local guidance specific to this repository: it covers
+attachments and document imports, browser behavior and accessibility, app tests,
+queue recovery, migrations, dependency lockfiles and the `docs/eng` mirror, in
+addition to the existing security review areas. See [operations](docs/eng/operations.md#repository-review-configuration)
+for inheritance and validation details.

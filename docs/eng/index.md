@@ -56,6 +56,11 @@ The tag `0` gives every update within version 0; `X.Y` gives only fixes and `X.Y
 
 Questions and ideas go to [Discussions](https://github.com/pissmyran/.github/discussions), bugs and suggestions as issues here. Read [CONTRIBUTING.md](https://github.com/pissmyran/.github/blob/main/CONTRIBUTING.md) before opening a pull request. Report security problems privately through the Security tab.
 
+CodeRabbit inherits the central configuration in `pissmyran/coderabbit/.coderabbit.yaml`
+through `inheritance: true`. Local review guidance also covers attachments and
+document imports, browser behavior and accessibility, app tests, queue recovery,
+migrations, lockfiles and the English documentation mirror. See [operations](operations.md#repository-review-configuration).
+
 ## License
 
 MIT, see [LICENSE](../../LICENSE).
