@@ -75,3 +75,22 @@ Check the binding, the object key and the link in D1 before anything is deleted 
 Check in this order: the route, the session in KV, the account in D1 and last the password, TOTP or OAuth flow. Never make a private route public to solve a sign-in error.
 
 Never put credentials, keys, email content or private API data in logs.
+
+## Repository review configuration
+
+`.coderabbit.yaml` uses `inheritance: true` to inherit
+`pissmyran/coderabbit/.coderabbit.yaml`. Only repository-specific review guidance
+is local. It also covers attachments and document imports, browser behavior and
+accessibility, app tests, queue recovery, migrations, lockfiles and the mirror
+under `docs/eng`.
+
+Under [CodeRabbit's inheritance rules](https://docs.coderabbit.ai/configuration/configuration-inheritance),
+unique central list entries remain, while a local entry with the same `path`
+replaces the central entry. Overlapping but different path patterns both remain.
+Scanners, review scope, advisory checks, disabled automatic approvals and disabled
+credit-consuming features remain centrally controlled.
+
+When changing the configuration, validate YAML syntax and duplicate keys, check
+against the [current schema](https://coderabbit.ai/integrations/schema.v2.json), and
+check that every path pattern covers its intended tracked files. Compare with
+the central configuration so unique security guidance survives the merge.
